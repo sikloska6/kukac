@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>kackackukac</title>
     <style>
         /* --- CSS STÍLUSOK --- */
@@ -12,12 +12,18 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            /* Letiltja a mobilos kijelölést és a felesleges érintési visszajelzéseket */
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         body {
-            background-color: #faf8f5; /* Tiszta, minimalista törtfehér háttér */
-            overflow: hidden; /* Hogy a kukacok ne csináljanak görgetősávot */
+            background-color: #faf8f5;
+            overflow: hidden; /* Megakadályozza a mobilos rángatózást/görgetést */
             height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -25,127 +31,152 @@
             position: relative;
         }
 
-        /* A központi felirat */
+        /* Központi felirat - Mobilbarát méretezéssel */
         .center-text {
-            font-size: 5rem;
+            font-size: 12vw; /* Reszponzív méret: képernyőszélességhez igazodik */
+            max-size: 5rem;  /* Monitoron se lesz túl hatalmas */
             color: #ff5e57;
-            text-shadow: 4px 4px 0px #ffeaa7;
-            z-index: 10; /* Biztosítja, hogy a szöveg a kukacok felett legyen */
-            user-select: none;
-            letter-spacing: 2px;
+            text-shadow: 3px 3px 0px #ffeaa7;
+            z-index: 10;
+            letter-spacing: 1px;
             animation: pulse 3s infinite ease-in-out;
+            text-align: center;
+            padding: 0 10px;
+            pointer-events: none; /* Átlátszó az érintéseknek */
+        }
+
+        @media (min-width: 768px) {
+            .center-text {
+                font-size: 5rem; /* Asztali gépen marad a szép nagy méret */
+            }
         }
 
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.04); }
         }
 
-        /* A mászkáló kukacok alapstílusa */
+        /* Kukacok alapstílusa */
         .worm {
             position: absolute;
-            font-size: 3.5rem;
+            font-size: 2.8rem; /* Kicsit kisebb méret mobilon, hogy ne legyen zsúfolt */
             white-space: nowrap;
-            user-select: none;
             z-index: 1;
-            transition: all 4s linear; /* Sima mozgásátmenet */
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+            transition: left 3.8s ease-in-out, top 3.8s ease-in-out; /* Lágyabb mozgás */
+            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.05));
         }
 
-        /* Különböző hernyó-animációk (hogy hullámozzanak mozgás közben) */
+        @media (min-width: 768px) {
+            .worm {
+                font-size: 3.5rem;
+            }
+        }
+
+        /* Kukac mozgás animációk */
         .wiggle-1 { animation: wormWiggle1 0.6s infinite alternate ease-in-out; }
         .wiggle-2 { animation: wormWiggle2 0.5s infinite alternate ease-in-out; }
         .wiggle-3 { animation: wormWiggle3 0.7s infinite alternate ease-in-out; }
 
         @keyframes wormWiggle1 {
-            0% { transform: scaleY(1) scaleX(1); }
-            100% { transform: scaleY(0.8) scaleX(1.1); }
+            0% { transform: scaleY(1) scaleX(var(--direction, 1)); }
+            100% { transform: scaleY(0.85) scaleX(calc(var(--direction, 1) * 1.05)); }
         }
 
         @keyframes wormWiggle2 {
-            0% { transform: skewX(-5deg); }
-            100% { transform: skewX(5deg); }
+            0% { transform: skewX(-4deg) scaleX(var(--direction, 1)); }
+            100% { transform: skewX(4deg) scaleX(var(--direction, 1)); }
         }
 
         @keyframes wormWiggle3 {
-            0% { transform: rotate(-5deg); }
-            100% { transform: rotate(5deg); }
+            0% { transform: rotate(-4deg) scaleX(var(--direction, 1)); }
+            100% { transform: rotate(4deg) scaleX(var(--direction, 1)); }
         }
     </style>
 </head>
 <body>
 
-    <h1 class="center-text">kackackukac Steveeee</h1>
+    <h1 class="center-text">kackackukac</h1>
 
     <script>
-        /* --- JAVASCRIPT (Kukac generátor és mozgató) --- */
+        /* --- JAVASCRIPT --- */
 
-        // Színes anime kukac variációk (emojik)
         const wormTypes = ['🐛', '🌈🐛', '🌸🐛', '✨🐛', '🍭🐛', '🍬🐛', '🎨🐛'];
         const wiggleClasses = ['wiggle-1', 'wiggle-2', 'wiggle-3'];
         
-        const wormCount = 12; // Hány kukac legyen egyszerre a képernyőn
+        // Mobilon kevesebb kukac kell, hogy ne akadjon be a telefon és átláthatóbb legyen
+        const isMobile = window.innerWidth < 768;
+        const wormCount = isMobile ? 7 : 12; 
         const worms = [];
 
-        // Kukac létrehozása
+        function getRandomValidCoordinate() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            
+            let x, y;
+            let isInCenterZone = true;
+
+            // Addig generálunk új koordinátát, amíg az nem a képernyő közepére esik
+            while (isInCenterZone) {
+                x = Math.random() * (w - 50);
+                y = Math.random() * (h - 50);
+
+                // A képernyő középső 40%-a a tiltott zóna a felirat miatt
+                const centerXStart = w * 0.3;
+                const centerXEnd = w * 0.7;
+                const centerYStart = h * 0.3;
+                const centerYEnd = h * 0.7;
+
+                if (!(x > centerXStart && x < centerXEnd && y > centerYStart && y < centerYEnd)) {
+                    isInCenterZone = false;
+                }
+            }
+            return { x, y };
+        }
+
         function createWorm() {
             const worm = document.createElement('div');
             worm.className = `worm ${wiggleClasses[Math.floor(Math.random() * wiggleClasses.length)]}`;
-            
-            // Véletlenszerű kukac típus kiválasztása
             worm.innerText = wormTypes[Math.floor(Math.random() * wormTypes.length)];
             
-            // Kezdőpozíció (véletlenszerűen a képernyőn)
-            const startX = Math.random() * window.innerWidth;
-            const startY = Math.random() * window.innerHeight;
-            
-            worm.style.left = `${startX}px`;
-            worm.style.top = `${startY}px`;
+            const pos = getRandomValidCoordinate();
+            worm.style.left = `${pos.x}px`;
+            worm.style.top = `${pos.y}px`;
             
             document.body.appendChild(worm);
             
-            // Eltároljuk a kukacot és a célpozícióját
             worms.push({
                 element: worm,
-                x: startX,
-                y: startY
+                x: pos.x,
+                y: pos.y
             });
         }
 
-        // Kukacok mozgatása új, véletlenszerű helyekre
         function moveWorms() {
             worms.forEach(worm => {
-                // Új koordináták generálása
-                const newX = Math.random() * (window.innerWidth - 60);
-                const newY = Math.random() * (window.innerHeight - 60);
+                const nextPos = getRandomValidCoordinate();
                 
-                // Megfordulás irányának meghatározása (amerre megy, arra nézzen)
-                if (newX < worm.x) {
-                    worm.element.style.transform += " scaleX(-1)"; // Tükrözés, ha balra megy
+                // Irány meghatározása és tükrözés (CSS változóval oldjuk meg az animáció megtartása mellett)
+                if (nextPos.x < worm.x) {
+                    worm.element.style.setProperty('--direction', '-1'); // Balra néz
                 } else {
-                    worm.element.style.transform += " scaleX(1)";
+                    worm.element.style.setProperty('--direction', '1');  // Jobbra néz
                 }
 
-                // Pozíció frissítése
-                worm.element.style.left = `${newX}px`;
-                worm.element.style.top = `${newY}px`;
+                worm.element.style.left = `${nextPos.x}px`;
+                worm.element.style.top = `${nextPos.y}px`;
                 
-                // Mentjük a jelenlegi helyzetét a következő körhöz
-                worm.x = newX;
-                worm.y = newY;
+                worm.x = nextPos.x;
+                worm.y = nextPos.y;
             });
         }
 
-        // Első körben létrehozzuk a kukacokat
+        // Inicializálás
         for (let i = 0; i < wormCount; i++) {
             createWorm();
         }
 
-        // Azonnal megmozdítjuk őket az indítás után egy kis szünettel
         setTimeout(moveWorms, 100);
-
-        // 4 másodpercenként új helyet keresnek maguknak a kukacok
-        setInterval(moveWorms, 4000);
+        setInterval(moveWorms, 4000); // 4 másodpercenként másznak új helyre
     </script>
 </body>
 </html>

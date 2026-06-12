@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>kackackukac</title>
+    <title>kackackukac - Bolt</title>
     <style>
         /* --- CSS STÍLUSOK --- */
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap');
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            /* Letiltja a mobilos kijelölést és a felesleges érintési visszajelzéseket */
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -21,34 +20,32 @@
 
         body {
             background-color: #faf8f5;
-            overflow: hidden; /* Megakadályozza a mobilos rángatózást/görgetést */
+            overflow: hidden;
             height: 100vh;
             width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Fredoka One', cursive;
+            font-family: 'Quicksand', sans-serif;
             position: relative;
         }
 
-        /* Központi felirat - Mobilbarát méretezéssel */
+        /* Központi felirat */
         .center-text {
-            font-size: 12vw; /* Reszponzív méret: képernyőszélességhez igazodik */
-            max-size: 5rem;  /* Monitoron se lesz túl hatalmas */
+            font-family: 'Fredoka One', cursive;
+            font-size: 12vw;
             color: #ff5e57;
             text-shadow: 3px 3px 0px #ffeaa7;
-            z-index: 10;
+            z-index: 5;
             letter-spacing: 1px;
             animation: pulse 3s infinite ease-in-out;
             text-align: center;
             padding: 0 10px;
-            pointer-events: none; /* Átlátszó az érintéseknek */
+            pointer-events: none;
         }
 
         @media (min-width: 768px) {
-            .center-text {
-                font-size: 5rem; /* Asztali gépen marad a szép nagy méret */
-            }
+            .center-text { font-size: 5rem; }
         }
 
         @keyframes pulse {
@@ -56,127 +53,206 @@
             50% { transform: scale(1.04); }
         }
 
-        /* Kukacok alapstílusa */
+        /* Lebegő Kosár kijelző a jobb felső sarokban */
+        .cart-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            font-family: 'Fredoka One', cursive;
+            font-size: 1rem;
+            color: #2d3436;
+            z-index: 100;
+            cursor: pointer;
+            border: 2px solid #ffeaa7;
+            transition: transform 0.2s;
+        }
+        .cart-badge:active { transform: scale(0.95); }
+
+        /* Mászkáló kukacok */
         .worm {
             position: absolute;
-            font-size: 2.8rem; /* Kicsit kisebb méret mobilon, hogy ne legyen zsúfolt */
+            font-size: 3rem;
             white-space: nowrap;
-            z-index: 1;
-            transition: left 3.8s ease-in-out, top 3.8s ease-in-out; /* Lágyabb mozgás */
-            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.05));
+            z-index: 10;
+            cursor: pointer; /* Mutatja, hogy rákattintható */
+            transition: left 3.8s ease-in-out, top 3.8s ease-in-out;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));
         }
 
-        @media (min-width: 768px) {
-            .worm {
-                font-size: 3.5rem;
-            }
-        }
-
-        /* Kukac mozgás animációk */
+        /* Hernyó mozgás animációk */
         .wiggle-1 { animation: wormWiggle1 0.6s infinite alternate ease-in-out; }
         .wiggle-2 { animation: wormWiggle2 0.5s infinite alternate ease-in-out; }
-        .wiggle-3 { animation: wormWiggle3 0.7s infinite alternate ease-in-out; }
 
         @keyframes wormWiggle1 {
             0% { transform: scaleY(1) scaleX(var(--direction, 1)); }
             100% { transform: scaleY(0.85) scaleX(calc(var(--direction, 1) * 1.05)); }
         }
-
         @keyframes wormWiggle2 {
             0% { transform: skewX(-4deg) scaleX(var(--direction, 1)); }
             100% { transform: skewX(4deg) scaleX(var(--direction, 1)); }
         }
 
-        @keyframes wormWiggle3 {
-            0% { transform: rotate(-4deg) scaleX(var(--direction, 1)); }
-            100% { transform: rotate(4deg) scaleX(var(--direction, 1)); }
+        /* POPUP MODAL (Vásárlási ablak) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
         }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 24px;
+            width: 85%; max-width: 340px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            transform: scale(0.8); transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+
+        .modal-emoji { font-size: 4.5rem; margin-bottom: 10px; display: inline-block; }
+        .modal-name { font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: #ff5e57; margin-bottom: 8px; }
+        .modal-desc { font-size: 0.95rem; color: #636e72; margin-bottom: 20px; font-weight: 500; }
+        .modal-price { font-size: 1.3rem; font-weight: 700; color: #2d3436; margin-bottom: 20px; }
+
+        .btn {
+            background: #ff5e57; color: white; border: none;
+            padding: 12px 24px; border-radius: 50px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            width: 100%; box-shadow: 0 6px 12px rgba(255, 94, 87, 0.3);
+            margin-bottom: 10px;
+        }
+        .btn-secondary { background: #b2bec3; box-shadow: none; }
     </style>
 </head>
 <body>
 
+    <div class="cart-badge" onclick="showCartInfo()">🛒 Kosár: <span id="cart-count">0</span></div>
+
     <h1 class="center-text">kackackukac</h1>
+
+    <div class="modal-overlay" id="worm-modal">
+        <div class="modal-box">
+            <span class="modal-emoji" id="pop-emoji">🐛</span>
+            <div class="modal-name" id="pop-name">Kukac neve</div>
+            <div class="modal-desc" id="pop-desc">Leírás helye...</div>
+            <div class="modal-price" id="pop-price">0 Ft</div>
+            <button class="btn" id="buy-btn">Örökbefogadás 💖</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Mégsem</button>
+        </div>
+    </div>
 
     <script>
         /* --- JAVASCRIPT --- */
 
-        const wormTypes = ['🐛', '🌈🐛', '🌸🐛', '✨🐛', '🍭🐛', '🍬🐛', '🎨🐛'];
-        const wiggleClasses = ['wiggle-1', 'wiggle-2', 'wiggle-3'];
-        
-        // Mobilon kevesebb kukac kell, hogy ne akadjon be a telefon és átláthatóbb legyen
-        const isMobile = window.innerWidth < 768;
-        const wormCount = isMobile ? 7 : 12; 
-        const worms = [];
+        // Kukac karakter adatbázis
+        const wormDatabase = [
+            { name: "Sakura Worm", price: 1500, emoji: "🌸🐛", desc: "Cseresznyevirág illatú, nagyon félénk kislány kukac." },
+            { name: "Shinobi Worm", price: 2200, emoji: "🥷🐛", desc: "A sötétben rejtőzködik, de imádja a ramen tésztát." },
+            { name: "Tsundere Worm", price: 1800, emoji: "💢🐛", desc: "Nem azért mászott ide, mert kedvel! Baka!" },
+            { name: "Neko Worm", price: 1900, emoji: "🐱🐛", desc: "Macskafülekkel felszerelt luxus hernyó." },
+            { name: "Magical Girl Worm", price: 2500, emoji: "✨🐛", desc: "Képes átváltozni és csillámport szórni." },
+            { name: "Otaku Worm", price: 1200, emoji: "🤓🐛", desc: "Egész nap mangát olvas a szoba sarkában." }
+        ];
 
-        function getRandomValidCoordinate() {
+        const wiggleClasses = ['wiggle-1', 'wiggle-2'];
+        const isMobile = window.innerWidth < 768;
+        const wormCount = isMobile ? 6 : 10; 
+        const worms = [];
+        let cartCount = 0;
+        let selectedWormForPurchase = null;
+
+        // Biztonságos zóna (hogy ne a feliratra szülessenek)
+        function getRandomCoordinate() {
             const w = window.innerWidth;
             const h = window.innerHeight;
-            
-            let x, y;
-            let isInCenterZone = true;
-
-            // Addig generálunk új koordinátát, amíg az nem a képernyő közepére esik
-            while (isInCenterZone) {
-                x = Math.random() * (w - 50);
-                y = Math.random() * (h - 50);
-
-                // A képernyő középső 40%-a a tiltott zóna a felirat miatt
-                const centerXStart = w * 0.3;
-                const centerXEnd = w * 0.7;
-                const centerYStart = h * 0.3;
-                const centerYEnd = h * 0.7;
-
-                if (!(x > centerXStart && x < centerXEnd && y > centerYStart && y < centerYEnd)) {
-                    isInCenterZone = false;
-                }
+            let x, y, inCenter = true;
+            while (inCenter) {
+                x = Math.random() * (w - 60);
+                y = Math.random() * (h - 60);
+                if (!(x > w*0.25 && x < w*0.75 && y > h*0.3 && y < h*0.7)) inCenter = false;
             }
             return { x, y };
         }
 
+        // Kukac generálás
         function createWorm() {
-            const worm = document.createElement('div');
-            worm.className = `worm ${wiggleClasses[Math.floor(Math.random() * wiggleClasses.length)]}`;
-            worm.innerText = wormTypes[Math.floor(Math.random() * wormTypes.length)];
+            const wormData = wormDatabase[Math.floor(Math.random() * wormDatabase.length)];
+            const wormElement = document.createElement('div');
+            wormElement.className = `worm ${wiggleClasses[Math.floor(Math.random() * wiggleClasses.length)]}`;
+            wormElement.innerText = wormData.emoji;
             
-            const pos = getRandomValidCoordinate();
-            worm.style.left = `${pos.x}px`;
-            worm.style.top = `${pos.y}px`;
+            const pos = getRandomCoordinate();
+            wormElement.style.left = `${pos.x}px`;
+            wormElement.style.top = `${pos.y}px`;
             
-            document.body.appendChild(worm);
-            
-            worms.push({
-                element: worm,
-                x: pos.x,
-                y: pos.y
+            // Kattintás esemény -> megnyitja a boltot
+            wormElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openModal(wormData);
             });
+
+            document.body.appendChild(wormElement);
+            worms.push({ element: wormElement, x: pos.x, y: pos.y });
         }
 
+        // Mozgás
         function moveWorms() {
             worms.forEach(worm => {
-                const nextPos = getRandomValidCoordinate();
-                
-                // Irány meghatározása és tükrözés (CSS változóval oldjuk meg az animáció megtartása mellett)
-                if (nextPos.x < worm.x) {
-                    worm.element.style.setProperty('--direction', '-1'); // Balra néz
-                } else {
-                    worm.element.style.setProperty('--direction', '1');  // Jobbra néz
-                }
-
+                const nextPos = getRandomCoordinate();
+                worm.element.style.setProperty('--direction', nextPos.x < worm.x ? '-1' : '1');
                 worm.element.style.left = `${nextPos.x}px`;
                 worm.element.style.top = `${nextPos.y}px`;
-                
-                worm.x = nextPos.x;
-                worm.y = nextPos.y;
+                worm.x = nextPos.x; worm.y = nextPos.y;
             });
         }
 
-        // Inicializálás
-        for (let i = 0; i < wormCount; i++) {
-            createWorm();
+        // Bolt ablak megnyitása
+        function openModal(data) {
+            selectedWormForPurchase = data;
+            document.getElementById('pop-emoji').innerText = data.emoji;
+            document.getElementById('pop-name').innerText = data.name;
+            document.getElementById('pop-desc').innerText = data.desc;
+            document.getElementById('pop-price').innerText = `${data.price.toLocaleString()} Ft`;
+            document.getElementById('worm-modal').classList.add('active');
         }
 
+        function closeModal() {
+            document.getElementById('worm-modal').classList.remove('active');
+        }
+
+        // Vásárlás gomb működése
+        document.getElementById('buy-btn').addEventListener('click', () => {
+            cartCount++;
+            document.getElementById('cart-count').innerText = cartCount;
+            alert(`✨ Sikeresen kosárba tetted a következőt: ${selectedWormForPurchase.name}! ✨`);
+            closeModal();
+        });
+
+        function showCartInfo() {
+            if(cartCount === 0) {
+                alert("A kosarad még üres. Kattints az egyik mászkáló kukacra az örökbefogadáshoz! 🐛");
+            } else {
+                alert(`🛒 Jelenleg ${cartCount} cuki anime kukac vár rád a kosárban a véglegesítésre!`);
+            }
+        }
+
+        // Indítás
+        for (let i = 0; i < wormCount; i++) createWorm();
         setTimeout(moveWorms, 100);
-        setInterval(moveWorms, 4000); // 4 másodpercenként másznak új helyre
+        setInterval(moveWorms, 4000);
     </script>
 </body>
 </html>
